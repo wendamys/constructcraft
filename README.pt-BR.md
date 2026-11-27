@@ -1,5 +1,7 @@
 # ConstructCraft
 
+**МасштабBIM** é uma versão modificada do ConstructCraft (© Francis Rebouças e colaboradores), distribuída sob a [licença GPL-3.0](LICENSE). Alterada em 27 de novembro de 2026. [Código-fonte do МасштабBIM](https://github.com/wendamys/constructcraft/tree/mashtab-bim)
+
 [![CI](https://github.com/francisreboucas/constructcraft/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/francisreboucas/constructcraft/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![Rust 2024](https://img.shields.io/badge/rust-2024_edition-orange.svg?logo=rust)](https://www.rust-lang.org/)

@@ -404,8 +404,8 @@ fn about(ctx: &Context, state: &mut AppState) {
         return;
     }
     let repository = env!("CARGO_PKG_REPOSITORY");
+    let source = "https://github.com/wendamys/constructcraft/tree/mashtab-bim";
     let mut open_repo = 0;
-    let mut check = 0;
     let response = Dialog::new("about", t!("dlg-about")).width(500.0).show(
         ctx,
         |ui| {
@@ -418,12 +418,16 @@ fn about(ctx: &Context, state: &mut AppState) {
                     ui.painter().image(logo.id(), rect, uv, egui::Color32::WHITE);
                 }
                 ui.add_space(6.0);
-                ui.label(RichText::new("ConstructCraft").family(theme::semibold()).size(24.0).color(PALETTE.text));
+                ui.label(RichText::new(crate::APP_NAME).family(theme::semibold()).size(24.0).color(PALETTE.text));
                 let version = format!("{} {}", t!("about-version"), env!("CARGO_PKG_VERSION"));
                 crate::settings::badge(ui, &version, PALETTE.accent_text);
                 ui.add_space(8.0);
                 ui.label(RichText::new(t!("about-text")).size(13.5).color(PALETTE.text));
                 ui.label(RichText::new(t!("about-familiar")).size(12.5).color(PALETTE.text_muted));
+                ui.add_space(8.0);
+                ui.label(t!("about-modified-build", "date" => crate::i18n::format_date(2026, 11, 27)));
+                ui.label(t!("about-source-code"));
+                ui.hyperlink(source);
             });
             ui.add_space(14.0);
             crate::settings::card(ui, |ui| {
@@ -450,7 +454,9 @@ fn about(ctx: &Context, state: &mut AppState) {
             });
             crate::settings::group(ui, &t!("about-credits"));
             ui.add_space(4.0);
-            for line in [t!("about-built-with"), t!("about-font-credit"), t!("about-icon-credit")] {
+            for line in
+                [t!("about-built-with"), t!("about-font-credit"), t!("about-russo-credit"), t!("about-icon-credit")]
+            {
                 ui.label(RichText::new(line).size(12.0).color(PALETTE.text_muted));
             }
             ui.add_space(12.0);
@@ -460,17 +466,11 @@ fn about(ctx: &Context, state: &mut AppState) {
         },
         |f| {
             open_repo = f.extra(t!("about-open-repository"));
-            check = f.extra(t!("action-check-updates"));
             f.primary(t!("action-close"));
         },
     );
     match response.clicked {
-        Some(i) if i == open_repo => ctx.open_url(egui::OpenUrl::new_tab(repository)),
-        Some(i) if i == check => {
-            // The report replaces the About dialog.
-            state.dialogs.about = false;
-            state.updates.start(ctx, true);
-        }
+        Some(i) if i == open_repo => ctx.open_url(egui::OpenUrl::new_tab(source)),
         Some(_) => state.dialogs.about = false,
         None if response.dismissed => state.dialogs.about = false,
         None => {}
@@ -488,7 +488,7 @@ fn update_report(ctx: &Context, state: &mut AppState) {
     let current = env!("CARGO_PKG_VERSION");
     let (mut download, mut skip, mut now) = (usize::MAX, usize::MAX, usize::MAX);
     let installable = matches!(&report, Some(Outcome::Available(r)) if crate::update::plan(r).is_some());
-    let mut dialog = Dialog::new("update-check", t!("action-check-updates")).width(420.0);
+    let mut dialog = Dialog::new("update-check", t!("pref-group-updates")).width(420.0);
     if matches!(report, Some(Outcome::Failed | Outcome::Disabled)) {
         dialog = dialog.kind(Kind::Warning);
     }
@@ -512,7 +512,7 @@ fn update_report(ctx: &Context, state: &mut AppState) {
                 ui.label(t!("update-failed"));
             }
             Some(Outcome::Disabled) => {
-                ui.label(t!("update-disabled", "variable" => crate::update::NO_CHECK_ENV));
+                ui.label(t!("update-disabled-in-build"));
             }
         },
         |f| {

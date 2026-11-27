@@ -26,8 +26,9 @@ fn ccad_beside(exe: &Path) -> Option<PathBuf> {
 pub fn run(args: Vec<String>) -> i32 {
     let Some(ccad) = std::env::current_exe().ok().as_deref().and_then(ccad_beside) else {
         eprintln!(
-            "ConstructCraft: the MCP server is the `ccad` command line, which was not found next to this \
-             program. Point the MCP client at ccad (ccad.exe on Windows) with the argument `mcp`."
+            "{}: the MCP server is the `ccad` command line, which was not found next to this \
+             program. Point the MCP client at ccad (ccad.exe on Windows) with the argument `mcp`.",
+            crate::APP_NAME
         );
         return 2;
     };
@@ -44,7 +45,7 @@ pub fn run(args: Vec<String>) -> i32 {
     match command.status() {
         Ok(status) => status.code().unwrap_or(1),
         Err(e) => {
-            eprintln!("ConstructCraft: could not start {}: {e}", ccad.display());
+            eprintln!("{}: could not start {}: {e}", crate::APP_NAME, ccad.display());
             2
         }
     }

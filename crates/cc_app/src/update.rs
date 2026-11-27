@@ -1,4 +1,6 @@
-//! Update notice: at startup (at most once a day) and on request, the app
+//! The upstream updater is disabled in this build, including manual checks
+//! and installation. In builds with updates enabled, the app
+//! checks at startup (at most once a day) and on request. It
 //! asks GitHub for the latest release of ConstructCraft in a background thread
 //! and, when it is newer than this build, shows a notice with a link to the
 //! release page. Checks only notify; *Update Now* (see [`crate::update_install`])
@@ -7,14 +9,17 @@
 //! The one request is an HTTPS GET of [`RELEASES_API`] with a short timeout
 //! and a bounded response; every failure is silent (logged) and reported as
 //! "could not check" only when the user asked. Automatic checks can be turned
-//! off in the About dialog, and the environment variable [`NO_CHECK_ENV`]
-//! turns every check off (CI and tests). Version comparison and the response
+//! off by a preference, and the environment variable [`NO_CHECK_ENV`]
+//! turns checks off in builds that enable them. Version comparison and the response
 //! parsing are pure functions, tested without a network.
 
 use crate::t;
 use crate::theme::{self, PALETTE};
 use std::sync::mpsc::{Receiver, TryRecvError};
 use std::time::Duration;
+
+/// Never replace the fork with a release of the upstream application.
+pub const ENABLED: bool = false;
 
 /// The GitHub API endpoint of the latest (non-draft, non-prerelease) release.
 pub const RELEASES_API: &str = "https://api.github.com/repos/francisreboucas/constructcraft/releases/latest";
@@ -93,7 +98,7 @@ pub enum Outcome {
     Available(Release),
     /// No answer, or one that could not be read.
     Failed,
-    /// Checks are turned off by [`NO_CHECK_ENV`].
+    /// Checks are disabled for this build or by [`NO_CHECK_ENV`].
     Disabled,
 }
 
@@ -132,7 +137,7 @@ pub fn disabled_by_env() -> bool {
 /// Whether an automatic check is due: turned on, and none in the last
 /// [`CHECK_INTERVAL`] (or the clock went back). Times are seconds since the Unix epoch.
 pub fn auto_check_due(enabled: bool, last_check: Option<u64>, now: u64) -> bool {
-    enabled && last_check.is_none_or(|last| now < last || now - last >= CHECK_INTERVAL.as_secs())
+    ENABLED && enabled && last_check.is_none_or(|last| now < last || now - last >= CHECK_INTERVAL.as_secs())
 }
 
 /// Seconds since the Unix epoch (0 if the clock is before it).
@@ -222,6 +227,9 @@ pub enum Plan {
 /// What Update Now does for `release` on this installation, or `None` (Download only).
 pub fn plan(release: &Release) -> Option<Plan> {
     use crate::update_install::{InstallKind, SUMS, deb_command, installs_itself, package_for, this_install};
+    if !ENABLED {
+        return None;
+    }
     let kind = this_install();
     let package = package_for(&kind, std::env::consts::ARCH, &release.assets)?.clone();
     if kind == InstallKind::Deb {
@@ -249,7 +257,7 @@ impl Updates {
             self.report = None;
         }
         // Tests never reach the network.
-        if disabled_by_env() || cfg!(test) {
+        if !ENABLED || disabled_by_env() || cfg!(test) {
             self.finish(Outcome::Disabled, manual);
             return;
         }
@@ -299,6 +307,9 @@ impl Updates {
 
     /// Update Now: install `release` here (or show how), in the update dialog.
     pub fn update_now(&mut self, ctx: &egui::Context, release: &Release) {
+        if !ENABLED {
+            return;
+        }
         self.available = None;
         self.report = None;
         self.install = Some(match plan(release) {
@@ -439,14 +450,13 @@ mod tests {
     }
 
     #[test]
-    fn automatic_checks_once_a_day() {
+    fn automatic_checks_are_disabled_for_all_preferences() {
         let day = CHECK_INTERVAL.as_secs();
-        assert!(auto_check_due(true, None, 1000));
-        assert!(!auto_check_due(false, None, 1000));
-        assert!(!auto_check_due(true, Some(1000), 1000 + day - 1));
-        assert!(auto_check_due(true, Some(1000), 1000 + day));
-        // A clock set back does not stop checks for good.
-        assert!(auto_check_due(true, Some(1000 + 10 * day), 1000));
+        for enabled in [false, true] {
+            for last_check in [None, Some(0), Some(2 * day - 1), Some(3 * day)] {
+                assert!(!auto_check_due(enabled, last_check, 2 * day));
+            }
+        }
     }
 
     fn release(version: Version) -> Release {
@@ -496,13 +506,18 @@ mod tests {
     }
 
     #[test]
-    fn tests_never_reach_the_network() {
+    fn manual_checks_and_installation_are_disabled() {
         let ctx = egui::Context::default();
         let mut updates = Updates::default();
         updates.start(&ctx, true);
         assert!(!updates.checking());
         assert_eq!(updates.report, Some(Outcome::Disabled));
         assert_eq!(updates.last_check, None);
+        let release =
+            Release { version: v(9, 0, 0), url: "https://example.invalid/release".into(), assets: Vec::new() };
+        updates.update_now(&ctx, &release);
+        assert!(updates.install.is_none());
+        assert_eq!(updates.report, Some(Outcome::Disabled));
     }
 
     /// A newer release keeps its packages, but only links to this repository's releases.

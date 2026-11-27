@@ -140,7 +140,7 @@ fn side_column(ui: &mut Ui, state: &AppState, page: Page) -> Option<Action> {
     ui.add_space(8.0);
     ui.separator();
     ui.add_space(8.0);
-    commands(ui, &[Preferences, About, CheckUpdates]);
+    commands(ui, &[Preferences, About]);
     action
 }
 

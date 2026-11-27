@@ -39,7 +39,7 @@ Botões que não podem rodar ficam acinzentados, e a dica explica o motivo. Moti
 
 Cada comando tem um único lugar nas abas do ribbon; a barra de acesso rápido, a paleta de comandos e os menus do botão direito podem oferecê-lo de novo. As abas são, nesta ordem:
 
-- **Arquivo**: uma página sobre a janela, não uma fileira de botões. À esquerda: Voltar (ou Esc), Novo, Abrir, Salvar, Salvar como, *Arquivos recentes*, *Exportar*, Fechar projeto, Preferências, Sobre e Verificar atualizações. À direita, *Arquivos recentes* lista os projetos recentes (um clique abre) e *Exportar*, todos os formatos de exportação com o que cada um grava, em cinza com o motivo quando a vista ativa não pode ser gravada assim, e depois os formatos dos plugins. Executar um comando, Esc ou outra aba volta para a aba que estava aberta antes.
+- **Arquivo**: uma página sobre a janela, não uma fileira de botões. À esquerda: Voltar (ou Esc), Novo, Abrir, Salvar, Salvar como, *Arquivos recentes*, *Exportar*, Fechar projeto, Preferências e Sobre. À direita, *Arquivos recentes* lista os projetos recentes (um clique abre) e *Exportar*, todos os formatos de exportação com o que cada um grava, em cinza com o motivo quando a vista ativa não pode ser gravada assim, e depois os formatos dos plugins. Executar um comando, Esc ou outra aba volta para a aba que estava aberta antes.
 - **Arquitetura**, **Estrutura**, **Instalações**, **Massa e Terreno**: as ferramentas que criam elementos do modelo, por disciplina. Os eixos ficam em Arquitetura; o material da Estrutura (Concreto, Aço, Madeira) é um controle segmentado no início da aba, que escolhe os grupos de estruturação e ligações.
 - **Anotar**: cotas, linhas e regiões de detalhe, texto, cotas de nível e etiquetas.
 - **Vista**: criar vistas, tabelas e folhas, gráficos da vista, ocultar e isolar, janelas. *Zoom para ajustar* fica na barra de cada vista (e no atalho ZE).
@@ -610,7 +610,7 @@ O carimbo desenha a folha inteira: borda, margens, o próprio carimbo, logotipos
 
 *Arquivo → Preferências* (Ctrl+,, também no pé da tela inicial) reúne as configurações do próprio aplicativo; elas não fazem parte de nenhum projeto e ficam guardadas entre as sessões. Escolha uma página na barra lateral à esquerda; cada página começa dizendo o que reúne, e cada configuração tem o nome e o que faz à esquerda e o controle (um interruptor, uma lista ou botões) à direita. As mudanças aparecem na hora; **OK** as mantém e **Cancelar** (ou Esc) volta aos valores de quando a janela abriu. **Restaurar padrões** (embaixo, à esquerda) volta as opções da página mostrada aos valores padrão; o idioma e as pastas ficam como estão.
 
-- **Geral**: o idioma da interface, *Verificar atualizações automaticamente* (veja o aviso de atualização abaixo) e *Blocos como componentes* para desenhos importados.
+- **Geral**: o idioma da interface (russo na primeira abertura), o status das atualizações e *Blocos como componentes* para desenhos importados.
 - **Interface**: o *Tema*, escolhido em três cartões com uma prévia (claro, escuro ou o do sistema operacional), a *Escala da interface* (75–200%, tudo cresce: painéis, ícones, texto; Ctrl+Mais e Ctrl+Menos também a mudam), o *Tamanho do texto* (quatro tamanhos, mostrados como *Aa* do pequeno ao muito grande; só o texto, em qualquer escala), *Iniciar com o ribbon recolhido*, *Dicas detalhadas* (desligadas, as dicas dos comandos mostram só o nome, o atalho e por que o comando está indisponível, sem a descrição e o comando do motor) e *Restaurar disposição dos painéis*.
 - **Desenho e navegação**: **Snap a objetos** escolhe onde as ferramentas de desenho, de Modificar e de medir fazem snap: *Snap a objetos* liga ou desliga todos de uma vez; *Todos os elementos da vista* faz o snap valer em tudo o que a vista desenha (vigas, sapatas, estacas, componentes e os demais: as pontas e os cantos das suas linhas, os meios dos seus lados e pontos sobre elas), não só em paredes, eixos e contornos; e cada tipo de ponto tem a sua opção: extremidades e cantos, pontos médios, centros (pilares, estacas, sapatas isoladas, arcos e círculos de desenhos importados), interseções, perpendicular, tangente, o ponto mais próximo na linha e as guias de alinhamento. Pontos livres continuam arredondados ao incremento do zoom. *Arrastar na vista 3D seleciona* (arrastar com o botão esquerdo desenha uma caixa de seleção e Shift+arrastar orbita; desligado, o contrário) e *Rolagem do trackpad move a vista*.
 - **Locais de arquivos**: a *Pasta de macros* (os diálogos de arquivo de macro começam nela e *Gerenciar → Executar macro* lista as macros dela), a *Pasta de projetos* (onde começam Abrir, Importar IFC, Importar CAD e o primeiro Salvar de um projeto novo; um projeto já salvo é salvo de novo ao lado dele mesmo), as pastas da biblioteca de componentes (*Adicionar pasta…*, *Remover*) e a *Pasta de plugins* (veja [Plugins](#plugins); sem definir, uma pasta `plugins` na pasta de dados do aplicativo), o *Modo de desenvolvedor de plugins* e a *Pasta de desenvolvimento* (veja *Desenvolvendo plugins* em [Plugins](#plugins)). O botão *Gerenciar pastas…* da janela da biblioteca de componentes abre esta página. Uma pasta que não existe mais aparece como *Não encontrada* e é ignorada.
@@ -665,24 +665,7 @@ Só essa aba usa a rede: ela lê o índice e os arquivos que ele lista, por HTTP
 
 ## Aviso de atualização
 
-O ConstructCraft avisa quando uma versão mais nova é publicada; ele nunca baixa nem instala nada por conta própria, só quando você escolhe **Atualizar agora**.
-
-- **Quando**: ao iniciar, no máximo uma vez por dia, em segundo plano (a janela nunca espera por isso). *Arquivo → Verificar atualizações* (também no diálogo *Sobre*) verifica na hora e informa "está atualizado", a nova versão ou que não foi possível verificar.
-- **O que é contatado**: uma requisição HTTPS à API do GitHub, `https://api.github.com/repos/francisreboucas/constructcraft/releases/latest`, que devolve a última versão publicada. A requisição envia os dados usuais de conexão (seu endereço IP) e o agente `ConstructCraft/<versão>`; nenhum dado de projeto, identificador ou informação de uso. Vale para ela a declaração de privacidade do GitHub.
-- **O que aparece**: quando a versão publicada é mais nova que a em uso (pré-lançamentos são ignorados), um aviso aparece na barra de status e na tela inicial: *Baixar* abre a página da versão no navegador, *Ignorar esta versão* esconde o aviso até sair uma versão posterior, e × o esconde até a próxima verificação. Qualquer falha (sem conexão, tempo esgotado, proxy, limite de requisições) é silenciosa.
-- **Atualizar agora**: onde o ConstructCraft pode se substituir com segurança, o aviso e o diálogo da verificação oferecem *Atualizar agora*. Ele baixa o pacote que corresponde à forma como esta cópia foi instalada e confere o SHA-256 com o `SHA256SUMS.txt` da versão (os dois pelos links de download da própria versão no GitHub) antes de mudar qualquer coisa; um download que não confere é apagado e a cópia instalada fica como estava.
-
-  | Instalado como | Atualizar agora faz |
-  |---|---|
-  | AppImage | Baixa o novo AppImage ao lado do antigo, confere, renomeia por cima do arquivo antigo e oferece *Reiniciar agora* |
-  | Instalador do Windows (`.msi`, em Arquivos de Programas) | Baixa e confere o instalador; ele roda quando o ConstructCraft fecha (*Instalar agora* fecha, perguntando antes sobre alterações não salvas; *Ao sair* espera), e o ConstructCraft abre de novo ao terminar |
-  | `.zip` do Windows | Baixa e confere o arquivo, coloca o novo `constructcraft.exe` e o `ccad.exe` no lugar (os antigos ficam como `.old` e são apagados na próxima abertura) e oferece *Reiniciar agora* |
-  | App do macOS | Baixa e confere a imagem de disco e a abre: arraste o ConstructCraft para Aplicativos |
-  | `.deb` | Nada: o diálogo mostra o comando do `apt`, com Copiar, e *Baixar* pega o pacote |
-  | `.tar.gz`, compilação própria | Nada: *Baixar* abre a página da versão |
-
-  Atualizar agora precisa de permissão de escrita nos arquivos instalados: um AppImage numa pasta sem permissão falha com uma mensagem, e *Baixar* é o caminho para atualizá-lo.
-- **Como desligar**: desmarque *Verificar atualizações automaticamente* em *Preferências → Geral*. A variável de ambiente `CONSTRUCTCAD_NO_UPDATE_CHECK=1` desliga toda verificação, automática ou pedida (útil em CI, quiosques e instalações sem rede). O ConstructCraft guarda a hora da última verificação, a versão ignorada e a opção junto com as outras preferências.
+As atualizações estão desativadas no МасштабBIM. *Preferências → Geral* exibe o status das atualizações. O comando *Atualizações* exibe o mesmo status.
 
 ## Salvamento automático e recuperação
 

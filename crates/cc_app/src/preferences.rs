@@ -419,10 +419,13 @@ impl Preferences {
 }
 
 /// Set the UI language at startup: `language` (from the command line), else
-/// the stored one, else the operating system's.
+/// the stored one, else Russian for a fresh profile.
 pub fn load_language(get: impl Fn(&str) -> Option<String>, language: Option<Language>) {
-    let saved = get(LANGUAGE_KEY).and_then(|c| Language::from_code(&c));
-    crate::i18n::set_language(language.or(saved).unwrap_or_else(Language::from_system));
+    crate::i18n::set_language(startup_language(get(LANGUAGE_KEY).as_deref(), language));
+}
+
+fn startup_language(saved: Option<&str>, override_language: Option<Language>) -> Language {
+    override_language.or_else(|| saved.and_then(Language::from_code)).unwrap_or(Language::Ru)
 }
 
 /// Restore every other stored preference into `state` at startup (`zoom`: see [`Preferences::read`]).
@@ -720,7 +723,7 @@ fn general(ui: &mut Ui, state: &mut AppState) {
         crate::actions::set_language(state, lang);
     });
     settings::group(ui, &t!("pref-group-updates"));
-    settings::switch_setting(ui, &t!("update-auto"), Some(&t!("update-auto-hint")), &mut state.prefs.check_updates);
+    ui.label(theme::muted(t!("update-disabled-in-build")));
     settings::group(ui, &t!("group-import"));
     settings::switch_setting(ui, &t!("label-cad-blocks"), Some(&t!("hint-cad-blocks")), &mut state.prefs.cad_blocks);
 }
@@ -1082,6 +1085,15 @@ fn shortcuts(ui: &mut Ui, state: &mut AppState, editor: &mut ShortcutEditor) {
 mod tests {
     use super::*;
     use std::collections::HashMap;
+
+    #[test]
+    fn startup_language_prefers_saved_language_to_russian_default() {
+        assert_eq!(startup_language(None, None), Language::Ru);
+        assert_eq!(startup_language(Some("invalid"), None), Language::Ru);
+        assert_eq!(startup_language(Some("en"), None), Language::En);
+        assert_eq!(startup_language(Some("pt-BR"), None), Language::PtBr);
+        assert_eq!(startup_language(Some("ru"), Some(Language::En)), Language::En);
+    }
 
     fn stored(prefs: &Preferences) -> HashMap<String, String> {
         let mut map = HashMap::new();

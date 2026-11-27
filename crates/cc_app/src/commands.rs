@@ -793,7 +793,7 @@ impl UiCommand {
             ExportImage => t!("action-export-image"),
             ExportDxf => t!("action-export-dxf"),
             About => t!("dlg-about"),
-            CheckUpdates => t!("action-check-updates"),
+            CheckUpdates => t!("pref-group-updates"),
             Preferences => t!("action-preferences"),
             Undo => t!("action-undo"),
             Redo => t!("action-redo"),

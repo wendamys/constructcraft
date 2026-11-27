@@ -4,7 +4,7 @@ use crate::i18n::Language;
 use crate::state::{AppState, PendingAction};
 use crate::theme::PALETTE;
 use crate::tools::Tool;
-use crate::{actions, canvas, dialogs, ribbon, schedule_ui, sheet, t, theme, view3d};
+use crate::{APP_NAME, actions, canvas, dialogs, ribbon, schedule_ui, sheet, t, theme, view3d};
 use cc_core::{Document, Project, ViewCategory, ViewId};
 use egui::{Event, Key, Modifiers, Ui, WidgetText};
 use egui_dock::tab_viewer::OnCloseResponse;
@@ -51,7 +51,7 @@ fn set_title(ctx: &egui::Context, last: &mut String, title: String) {
 fn window_title(path: Option<&std::path::Path>, name: &str, dirty: bool) -> String {
     let file = path.and_then(|p| p.file_name()).map(|f| f.to_string_lossy().into_owned());
     let dirty = if dirty { " *" } else { "" };
-    format!("ConstructCraft — {}{dirty}", file.as_deref().unwrap_or(name))
+    format!("{APP_NAME} — {}{dirty}", file.as_deref().unwrap_or(name))
 }
 
 impl ConstructApp {
@@ -81,8 +81,8 @@ impl ConstructApp {
             log::info!("graphics: {} ({:?}, {})", info.name, info.backend, info.driver_info);
         }
         let stored = |key: &str| cc.storage.and_then(|s| s.get_string(key));
-        // Command line, then saved preference, then the operating system
-        // language; set first, since the placeholder project is named in it.
+        // Command line, then saved preference, then Russian. Set first,
+        // since the placeholder project is named in this language.
         crate::preferences::load_language(stored, language);
         let mut state = AppState::new(Document::new(actions::new_project()));
         crate::preferences::load(&mut state, stored, cc.egui_ctx.zoom_factor());
@@ -91,7 +91,9 @@ impl ConstructApp {
         crate::preferences::sync_look(&cc.egui_ctx, &mut state.prefs, &mut look);
         state.updates.start_if_due(&cc.egui_ctx, state.prefs.check_updates);
         // The executables an update replaced on Windows stay as `.old` until now.
-        if let Ok(exe) = std::env::current_exe() {
+        if crate::update::ENABLED
+            && let Ok(exe) = std::env::current_exe()
+        {
             crate::update_install::remove_old_executables(&exe);
         }
         match path {
@@ -487,7 +489,9 @@ impl eframe::App for ConstructApp {
         self.state.session.cancel_job();
         self.recovery.exit();
         // Update Now left the new version to start, or its installer to run.
-        if let Some(next) = self.state.updates.on_exit.take() {
+        if crate::update::ENABLED
+            && let Some(next) = self.state.updates.on_exit.take()
+        {
             crate::update_install::finish(&next);
         }
     }
@@ -529,7 +533,7 @@ impl ConstructApp {
             let doc = &self.state.session.doc;
             window_title(doc.path.as_deref(), &self.state.project().info.name, doc.is_dirty())
         });
-        set_title(&ctx, &mut self.title, title.unwrap_or_else(|| "ConstructCraft".to_string()));
+        set_title(&ctx, &mut self.title, title.unwrap_or_else(|| APP_NAME.to_string()));
 
         if self.state.show_home {
             crate::home::show(ui, &mut self.state);
@@ -786,9 +790,8 @@ mod tests {
             })
         };
         let mut last = String::new();
-        assert!(settle(&mut |ctx| set_title(ctx, &mut last, "ConstructCraft".into())).is_some_and(|n| n <= 3));
-        let every_frame =
-            |ctx: &egui::Context| ctx.send_viewport_cmd(egui::ViewportCommand::Title("ConstructCraft".into()));
+        assert!(settle(&mut |ctx| set_title(ctx, &mut last, APP_NAME.into())).is_some_and(|n| n <= 3));
+        let every_frame = |ctx: &egui::Context| ctx.send_viewport_cmd(egui::ViewportCommand::Title(APP_NAME.into()));
         assert_eq!(settle(&mut { every_frame }), None, "sending it every frame never settles");
     }
 
@@ -796,10 +799,10 @@ mod tests {
     #[test]
     fn the_window_title_names_the_open_file() {
         let path = std::path::Path::new("projetos/casa.ccad");
-        assert_eq!(window_title(Some(path), "Novo projeto", false), "ConstructCraft — casa.ccad");
-        assert_eq!(window_title(Some(path), "Novo projeto", true), "ConstructCraft — casa.ccad *");
+        assert_eq!(window_title(Some(path), "Novo projeto", false), "МасштабBIM — casa.ccad");
+        assert_eq!(window_title(Some(path), "Novo projeto", true), "МасштабBIM — casa.ccad *");
         // Not saved yet: the project's name.
-        assert_eq!(window_title(None, "Novo projeto", true), "ConstructCraft — Novo projeto *");
+        assert_eq!(window_title(None, "Novo projeto", true), "МасштабBIM — Novo projeto *");
     }
 
     #[test]

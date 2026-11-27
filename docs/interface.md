@@ -39,7 +39,7 @@ Buttons that cannot run are greyed out, and their tooltip gives the reason. Typi
 
 Each command has one place in the ribbon tabs; the quick access toolbar, the command palette and right-click menus may offer it again. The tabs are, in order:
 
-- **File**: a page over the window rather than a row of buttons. Down its left: Back (or Esc), New, Open, Save, Save As, *Recent Files*, *Export*, Close Project, Preferences, About and Check for Updates. On its right, *Recent Files* lists the recent projects (a click opens one) and *Export* every export format with what it writes, greyed with the reason when the active view cannot be written so, then the plugins' formats. Running a command, Esc or another tab goes back to the tab shown before.
+- **File**: a page over the window rather than a row of buttons. Down its left: Back (or Esc), New, Open, Save, Save As, *Recent Files*, *Export*, Close Project, Preferences and About. On its right, *Recent Files* lists the recent projects (a click opens one) and *Export* every export format with what it writes, greyed with the reason when the active view cannot be written so, then the plugins' formats. Running a command, Esc or another tab goes back to the tab shown before.
 - **Architecture**, **Structure**, **MEP**, **Massing & Site**: the tools that create model elements, by discipline. Grids live in Architecture; Structure's material (Concrete, Steel, Timber) is a segmented control at the start of the tab that picks its framing and connection groups.
 - **Annotate**: dimensions, detail lines and regions, text, level marks and tags.
 - **View**: creating views, schedules and sheets, view graphics, hiding and isolating, windows. *Zoom to Fit* is in each view's bar (and ZE).
@@ -610,7 +610,7 @@ A title block draws the whole sheet: border, margins, the block itself, logos. I
 
 *File → Preferences* (Ctrl+,, also at the bottom of the home screen) holds the settings of the app itself; they are not part of any project and are kept between sessions. Pick a page in the sidebar on the left; each page starts with what it holds, and each setting has its name and what it does on the left and its control (a switch, a list or buttons) on the right. Changes show at once; **OK** keeps them and **Cancel** (or Esc) brings back the values the window opened with. **Restore defaults** (bottom left) resets the settings of the page shown; the language and the folders stay as they are.
 
-- **General**: the interface language, *Check for updates automatically* (see the update notice below) and *Blocks as components* for imported drawings.
+- **General**: the interface language (Russian on first launch), the update status and *Blocks as components* for imported drawings.
 - **Interface**: the *Theme*, picked from three picture cards (light, dark, or the operating system's), the *Interface scale* (75–200%, everything grows: panels, icons, text; Ctrl+Plus and Ctrl+Minus change it too), the *Text size* (four sizes, shown as *Aa* from small to extra large; only the text, at any scale), *Start with the ribbon collapsed*, *Detailed tooltips* (when off, command tooltips show only the name, the shortcut and why a command is unavailable, without the description and the engine command) and *Reset panel layout*.
 - **Drawing & navigation**: **Object snaps** choose where the drawing, Modify and measuring tools snap: *Snap to objects* turns object snaps on or off as a whole; *Every element in the view* makes them snap to everything the view draws (beams, footings, piles, components and the rest: the ends and corners of their lines, the middles of their sides and points on them), not only to walls, grids and outlines; and each kind of point has its own switch: endpoints and corners, midpoints, centers (columns, piles, pad footings, arcs and circles of imported drawings), intersections, perpendicular, tangent, the nearest point on a line, and the alignment guides. Free points still round to the zoom's increment. *Dragging in 3D views selects* (a left drag draws a selection box and Shift+drag orbits; off, the other way round) and *Trackpad scrolling pans the view*.
 - **File locations**: the *Macros folder* (the macro file dialogs start there and *Manage → Run Macro* lists its macros), the *Projects folder* (where Open, Import IFC, Import CAD and the first Save of a new project start; a saved project is saved again next to itself), the component library folders (*Add Folder…*, *Remove*) and the *Plugins folder* (see [Plugins](#plugins); not set, a `plugins` folder in the app's data folder), *Plugin developer mode* and the *Development folder* (see *Developing plugins* under [Plugins](#plugins)). The component library window's *Manage Folders…* opens this page. A folder that no longer exists is marked *Not found* and skipped.
@@ -665,24 +665,7 @@ Only this tab reaches the network: it reads the index and the archives it lists,
 
 ## Update notice
 
-ConstructCraft tells you when a newer version is published; it never downloads or installs anything by itself, only when you choose **Update Now**.
-
-- **When**: at startup, at most once a day, in the background (the window never waits for it). *File → Check for Updates* (also in the *About* dialog) checks at once and reports "up to date", the new version, or that it could not check.
-- **What is contacted**: one HTTPS request to the GitHub API, `https://api.github.com/repos/francisreboucas/constructcraft/releases/latest`, which returns the latest published release. The request sends the usual connection data (your IP address) and a `ConstructCraft/<version>` user agent; no project data, identifier or usage information. GitHub's privacy statement applies to it.
-- **What you see**: when the release is newer than the running version (pre-releases are ignored), a notice appears in the status bar and on the home screen: *Download* opens the release page in your browser, *Skip This Version* hides the notice until a later version comes out, and × hides it until the next check. Any failure (offline, timeout, proxy, rate limit) is silent.
-- **Update Now**: where ConstructCraft can replace itself safely, the notice and the check's dialog offer *Update Now*. It downloads the package that fits how this copy was installed and checks its SHA-256 against the release's `SHA256SUMS.txt` (both from the release's own download links on GitHub) before anything changes; a download that does not match is deleted and the installed copy is left as it was.
-
-  | Installed as | Update Now does |
-  |---|---|
-  | AppImage | Downloads the new AppImage next to the old one, checks it, renames it over the old file and offers *Restart Now* |
-  | Windows installer (`.msi`, under Program Files) | Downloads and checks the installer; it runs when ConstructCraft closes (*Install Now* closes it, asking about unsaved changes first; *On Exit* waits), and ConstructCraft opens again when it is done |
-  | Windows `.zip` | Downloads and checks the archive, puts the new `constructcraft.exe` and `ccad.exe` in place (the old ones are kept as `.old` and removed at the next start) and offers *Restart Now* |
-  | macOS app | Downloads and checks the disk image and opens it: drag ConstructCraft to Applications |
-  | `.deb` | Nothing: the dialog shows the `apt` command, with Copy, and *Download* gets the package |
-  | `.tar.gz`, builds from source | Nothing: *Download* opens the release page |
-
-  Update Now needs write access to the installed files: an AppImage in a folder you cannot write to fails with a message, and *Download* is the way to update it.
-- **Turning it off**: clear *Check for updates automatically* in *Preferences → General*. The environment variable `CONSTRUCTCAD_NO_UPDATE_CHECK=1` turns off every check, automatic or on request (useful for CI, kiosks and offline installations). ConstructCraft remembers the last check time, the skipped version and the setting with its other preferences.
+Updates are disabled in МасштабBIM. *Preferences → General* displays the update status. The *Updates* command shows the same status.
 
 ## Autosave and recovery
 

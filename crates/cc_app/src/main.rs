@@ -115,6 +115,8 @@ mod wall_draw_ui;
 mod wall_framing_ui;
 mod wall_profile_ui;
 
+const APP_NAME: &str = "МасштабBIM";
+
 fn main() -> eframe::Result<()> {
     // The Revit converter that `rvt_import` starts; read before `std::env::args`, which takes UTF-8 only.
     #[cfg(feature = "rvt")]
@@ -141,7 +143,7 @@ fn main() -> eframe::Result<()> {
     let viewport = egui::ViewportBuilder::default()
         .with_inner_size([1440.0, 900.0])
         .with_min_inner_size([900.0, 600.0])
-        .with_title("ConstructCraft")
+        .with_title(APP_NAME)
         .with_icon(app_icon());
     // The Wayland app id / X11 class names the desktop file (packaging/linux),
     // so desktops show its icon. eframe keeps its settings under the same
@@ -149,7 +151,7 @@ fn main() -> eframe::Result<()> {
     #[cfg(target_os = "linux")]
     let viewport = viewport.with_app_id("constructcraft");
     // The language of a start-up error message (the app then applies the saved preference).
-    i18n::set_language(args.language.unwrap_or_else(i18n::Language::from_system));
+    i18n::set_language(args.language.unwrap_or(i18n::Language::Ru));
     // Try the graphics APIs in turn until one shows the window (issue #74).
     let mut last_error = None;
     for api in gpu::startup_plan() {
