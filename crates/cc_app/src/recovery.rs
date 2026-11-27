@@ -18,9 +18,14 @@ const INTERVAL: Duration = Duration::from_secs(60);
 /// The crash log is started over once it grows past this many bytes.
 const CRASH_LOG_LIMIT: u64 = 1 << 20;
 
+/// The name of the app's data folder. This build keeps a folder of its own, so its
+/// preferences (the language among them), recovery copies and thumbnails stay apart
+/// from ConstructCraft's `ConstructCAD` folder.
+pub const DATA_FOLDER: &str = "Mashtab AI BIM";
+
 /// The app's data folder (where eframe keeps its preferences).
 pub fn data_dir() -> Option<PathBuf> {
-    eframe::storage_dir("ConstructCAD")
+    eframe::storage_dir(DATA_FOLDER)
 }
 
 /// The folder of the recovery copies.
@@ -324,6 +329,14 @@ mod tests {
             r.tick(state);
         }
         panic!("the copy was never written");
+    }
+
+    /// On Windows the folder is `%APPDATA%\Mashtab AI BIM\data`, not ConstructCraft's.
+    #[cfg(windows)]
+    #[test]
+    fn the_data_folder_is_this_builds_own() {
+        let dir = data_dir().expect("a data folder");
+        assert!(dir.ends_with(Path::new("Mashtab AI BIM").join("data")), "{}", dir.display());
     }
 
     #[test]

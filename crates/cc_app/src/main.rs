@@ -164,7 +164,11 @@ fn main() -> eframe::Result<()> {
         };
         let args = args.clone();
         let run = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            eframe::run_native("ConstructCAD", options, Box::new(|cc| Ok(Box::new(app::ConstructApp::new(cc, args)))))
+            eframe::run_native(
+                recovery::DATA_FOLDER,
+                options,
+                Box::new(|cc| Ok(Box::new(app::ConstructApp::new(cc, args)))),
+            )
         }));
         match run {
             Ok(Ok(())) => return Ok(()),

@@ -22,7 +22,7 @@ pub enum Job {
 }
 
 fn dir() -> Option<PathBuf> {
-    eframe::storage_dir("ConstructCAD").map(|d| d.join("thumbnails"))
+    crate::recovery::data_dir().map(|d| d.join("thumbnails"))
 }
 
 /// FNV-1a: stable file names across runs and platforms.
@@ -263,6 +263,12 @@ mod tests {
         let path = dir.join(name);
         session.run(cc_engine::commands::io::ComponentSave { component, path: path.clone() }).unwrap();
         Some(path)
+    }
+
+    /// Thumbnails are kept in the app's own data folder.
+    #[test]
+    fn thumbnails_are_kept_in_the_apps_data_folder() {
+        assert_eq!(dir(), crate::recovery::data_dir().map(|d| d.join("thumbnails")));
     }
 
     /// A door's thumbnail shows it in a wall; other components stand alone.
