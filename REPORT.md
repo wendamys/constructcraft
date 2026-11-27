@@ -1,80 +1,116 @@
-# Масштаб AI / BIM
+# REPORT — review of `mashtab-bim` (Масштаб AI / BIM), reviewer Claude Opus 5.5
 
-Задача mashtabai/stepan-tasks#208. Ветка `mashtab-bim` в `wendamys/constructcraft`. При сверке использовано написание из `D:\StepanOrca\coord\brand-inbox.md`. После двух обрывов Orca продолжена существующая ветка с коммитами `ae474622`, `d394f2a0`, `09fe92fd` и слиянием `e925ca63`. Координатор перенёс оценку сдачи с 16:20 на 16:35 (+07) 27.11.2026. Сборка проверок стартовала в 15:57, когда координатор уточнил, что лимит одной сборки применяется к процессам работника.
+VERDICT: MERGE AFTER COORDINATOR CHECK
 
-## Критерии
+Branch `wendamys/mashtab-bim-review`, HEAD of the checked code 9f0aca15 (this `report:` commit adds only REPORT.md). Merged: `origin/mashtab-bim` bb334e5f (author `report:`, parts
+ae474622, d394f2a0, 09fe92fd, d2e462e7, d4908c9f), which already contains `origin/wendamys/pdf-extend-review` ad8f680c
+(3e6e744f; `git merge-base --is-ancestor` true). Reviewed diff: `origin/wendamys/pdf-review-b...origin/mashtab-bim`,
+brand part `68bf2cc4..bb334e5f`; requirements: criteria 1–7 of `coord/brand.md` + `coord/brand-inbox.md`.
 
-| № | Результат и проверка |
-| --- | --- |
-| 1 | `assets/icons/app-icon.png` (512²), `app-icon-256.png` (256²) и `app-icon.ico` из утверждённого RGBA PNG, SHA-256 `f19df93c6066f8ab0f8f86d82641c3f74b81b56e80314db58ac26e18eeb48599`. `.tmp/brand_check_assets.py` подтвердил прозрачность, центрирование и кадры ICO 16/24/32/48/64/128/256. Проверочный лист `.tmp/shots/icon_sizes.png` просмотрен. `main.rs:146`, `theme.rs:224`, `build.rs:12` задают значок окна, интерфейса и Windows-ресурс. |
-| 2 | Блок `МАСШТАБ AI / BIM` в `ribbon.rs:978` с фирменным знаком и отдельным семейством Russo One (`theme.rs:249`, `theme.rs:335`). SHA-256 шрифта `bc0abcc660bd8b7ad3000ecb2898a27c58a29a50f7ec81652fa12e75148d09df` совпал с Google Fonts. Текст OFL совпал после нормализации концевых пробелов. Лицензия перечислена в `README.md:276` и `README.pt-BR.md`. |
-| 3 | Общая константа `cc_engine/src/app_name.rs:2`, подстановка `app-name` в `cc_engine/src/i18n.rs:154`, начальный заголовок `main.rs:146` и заголовок проекта `app.rs:51`. Сохранены eframe ID `ConstructCAD` и Linux app ID `constructcraft`, расширение `.ccad`, CLI `ccad` и пути восстановления (`recovery.rs:22`). Сборочный скрипт `cc_app/build.rs:12` задаёт все четыре согласованных поля exe. PowerShell `VersionInfo` на `.tmp/resource-probe/resource-probe.exe` подтвердил FileDescription и ProductName `Масштаб AI / BIM`, CompanyName `Масштаб AI`, LegalCopyright `© Масштаб AI · mashtab-ai.ru; основано на ConstructCraft © Francis Rebouças, GPL-3.0`. |
-| 4 | «О программе» в `dialogs.rs:402` показывает знак, название, согласованный текст ru/en, номер релиза и `сборка Масштаб AI 1 от 27.11.2026`, дату изменения, GPL, автора и ссылку на ветку форка. Сохранены `LICENSE`, `assets/icons/FLATICON.txt`, исходные кредиты и ссылка на репозиторий ConstructCraft. |
-| 5 | `update.rs:22,139,227,260,309`, `app.rs:492`: автоматическая и ручная проверки привязаны к `ENABLED = false`, ручная возвращает `Disabled` до построения запроса, скачивание/установка и запуск установщика на выходе закрыты. Из File убрана кнопка проверки (`backstage.rs`), команда и общие настройки выводят «Обновления в этой сборке отключены». |
-| 6 | `preferences.rs:423`: `--lang` → сохранённый код → русский. До загрузки сохранённой настройки ошибки старта получают `--lang` или русский (`main.rs:154`). |
-| 7 | Для выдаваемой папки можно назвать программу `Mashtab AI BIM.exe`. `mcp_bridge.rs:19` ищет `ccad.exe` рядом с текущим exe, `gpu.rs:185` повторно запускает фактический путь, а ресурсы вшиты и настройки привязаны к постоянным ID. В рабочем пути приложения нет проверки имени процесса для одного экземпляра. В upstream MSI ассоциация `.ccad` и ярлыки ссылаются на `constructcraft.exe` (`packaging/windows/constructcraft.wxs`), upstream workflow упаковывает бинарник под исходным именем (`.github/workflows/release.yml:69`), отключённый updater ищет это имя внутри архива (`update_install.rs:308`). При упаковке портативной папки оставить `ccad.exe` рядом, ярлык направить на переименованный exe. |
+## Findings
+1. `crates/cc_app/src/update.rs:263` (author's line 260) — `if !ENABLED || disabled_by_env() || cfg!(test)`: in tests
+   `cfg!(test)` alone returned Disabled, so no test held the ENABLED gate of manual checks (found by reading). Fixed in
+   6d99fa80: the test-offline guard moved into `spawn()` (`update.rs:170`, disconnected receiver = failed check). Mutation
+   M2 (drop `!ENABLED ||`) after the fix: FAIL `manual_checks_and_installation_are_disabled` (`!updates.checking()`, update.rs:516) — held. Before the fix the same mutation is masked by `|| cfg!(test)` (read from code; not run separately).
+2. nit `crates/cc_app/src/dialogs.rs:406,449` — About's "Repository" row shows upstream `CARGO_PKG_REPOSITORY`
+   (github.com/francisreboucas/constructcraft) while the "Open repository" button opens the fork. Left: both are true
+   (upstream project, fork source above); product choice for the coordinator.
+3. nit `crates/cc_app/src/ribbon.rs:990` — "МАСШТАБ AI" is a hard-coded string, not an ftl key (brand wordmark, same in
+   every language); `about-familiar` key is now unused. Left.
+4. Six snapshot tests fail with `CC_UI_SNAPSHOTS=1` on this machine (home, preferences, ribbon — as the author — plus
+   graphics_dialog (`filters`, 98 882 px), icon_gallery (`icons_*`, ~34 000 px), library (`library_*`, 274–793 px), which the
+   author did not run). All on references the branch does not change, rendered by code the branch does not change
+   (`git diff --stat 68bf2cc4 HEAD -- assets/icons/ui crates/cc_core crates/cc_app/src/{icons,library,home,palette}.rs
+   examples` and those PNGs — empty). Seen: `filters.new.png` has a category the reference lacks («Marcadores de elevação
+   interna»), `icons_*.new.png` has more icons — stale upstream references. Masks: `.tmp/review/drift/`. Not fixed.
+5. Test hermeticity (pre-existing, not branch): `home_snapshots` reads sample thumbnails from the real profile
+   (`thumbnails.rs:24,38`, `storage_dir("ConstructCAD")/thumbnails/sample-*.png`). On office-65 the cache
+   `C:\Users\stepan-orca\AppData\Roaming\ConstructCAD\data\thumbnails\sample-casa_simples.png` (25.11 21:03) is the hip-roof
+   house with a canopy — exactly the "other house" in the author's `home_*` drift. Not fixed (outside the task).
 
-## Ключи ftl
+## Unanchored guarantees
+- `app.rs:94`, `app.rs:492` `update::ENABLED &&` before `remove_old_executables` / `update_install::finish`: startup and
+  exit of the eframe app, no test. `on_exit` is only set by `update_now` (M4 not run).
+- `plan()` gate `update.rs:234` (M3 not run) — `update_now` has its own gate; `plan` is also read by the dialog only when
+  `available` is set, which only a network answer sets.
 
-`about-brand-build`, `about-icon-credit`, `about-modified-build`, `about-russo-credit`, `about-source-code`, `about-text`, `app-name`, `clipboard-note`, `cmd-desc-check-updates`, `cmd-desc-open`, `dlg-recovery-text`, `err-image-unreadable`, `err-parse`, `file-filter`, `file-filter-component`, `file-filter-macro`, `gpu-failed-title`, `plug-incompatible`, `plug-needs-app`, `plug-review`, `update-disabled-in-build`. `err-image-unreadable` сохранён в ru и uk-UA, где формулировка уже была нейтральной. 13 каталогов совпали по ключам и плейсхолдерам в проверке `.tmp/brand_check_assets.py`.
+## Base vs branch
+- Committed references (`git show 68bf2cc4:` vs HEAD, RGB diff): ribbon_architecture / ribbon_file 1100 px differ only in
+  x 10–580, y 9–31; ribbon_narrow 520 px only x 10–489, y 9–31; preferences_general only the Updates group (300–912 ×
+  233–403). Everything else in those frames is pixel-identical to the base.
+- Drift of six untouched references (author's 3 failing tests): home_* — profile thumbnail cache (finding 5, shown by
+  the cache file). palette (1-px line y=101), preferences_shortcuts (text cursor x 329–331), preferences_interface(_dark)
+  (1–2 px of the light/dark split in the "System" tile): rasterisation-level; the branch does not touch palette.rs,
+  home.rs or the Interface page. A run of the same tests on base 68bf2cc4 was not done (time; a second worktree means a
+  full rebuild on the HDD): cause for these four — not determined, passed to the gate.
 
-Русские и английские строки сверены с решением Степана. Русское описание — «Проектирование зданий в BIM: планы, 3D-модель, разрезы, листы и спецификации». Английское — «Building design in BIM: plans, 3D model, sections, sheets and schedules».
+## Probes for the coordinator
+1. `git -C <wt> grep -n "ENABLED" crates/cc_app/src/update.rs crates/cc_app/src/app.rs` — 6 gates.
+2. `git diff 68bf2cc4 HEAD --stat -- crates/cc_app/src/home.rs crates/cc_app/src/palette.rs examples` — empty.
+3. Open `crates/cc_app/tests/snapshots/ribbon_narrow.png` — brand block and quick access in one row at 520 px.
 
-## База и проверенный код
+## Run
+Build dir `D:\StepanOrca\build\target-i18n`, `-j2`, via `one-build.ps1` (logs `.tmp/review/t1.log`, `run3.log`).
+- Before the author's last part, HEAD with fix: `cargo nextest run -p cc_app update:: startup_language window_title title_` —
+  54 passed (incl. update::tests::*, preferences startup_language, app title tests).
+- HEAD 9f0aca15 (+ temporary `review_brand_shots`, not committed): `CC_UI_SNAPSHOTS=1 cargo nextest run -p cc_app
+  review_brand_shots snapshot ribbon_buttons_are_accessible every_dialog_keeps update:: startup_language window_title` —
+  22 run, 16 passed, 6 failed (snapshot drift, finding 4); passed: all update::tests, startup_language, window title,
+  ribbon_buttons_are_accessible, every_dialog_keeps_its_body_inside, phases/sheet/title-block snapshots.
+- `cargo nextest run -p cc_engine --lib i18n::` — 8/8 passed (application_name_is_shared_by_localized_messages,
+  languages_are_complete, placeholders…).
+- Mutations (applied by `.tmp/review/mutate.py`, reverted after each, `git diff --quiet` checked):
+  | mutation | failed | added |
+  |---|---|---|
+  | M2 `start`: drop `!ENABLED \|\|` | 1 (`manual_checks_and_installation_are_disabled`) | fix 6d99fa80 |
+  | M1 `auto_check_due`: drop `ENABLED &&` | 1 (`automatic_checks_are_disabled_for_all_preferences`) | — |
+  | M5 `startup_language`: Ru → from_system | no result: started 17:54, the run was stopped by Claude Code for low system memory (~18:05); mutation reverted by hand, tree clean | — |
+  | M3/M4/M6 (plan gate, update_now gate, saved language) | not run | — |
+- `cargo clippy -p cc_app --all-targets -- -D warnings` (clean tree): PASS (exit 0, 17:51–17:54). `cargo fmt --all -- --check`: PASS on HEAD.
 
-- Влита `origin/wendamys/pdf-extend-review` на `ad8f680c6b65dec21e68d1ea5ca491fb0740cbc8` коммитом `3e6e744f`. Обновление базы добавило только отчёт PDF-ревью. Отчёт PDF-ревью сохранён в исходной ветке.
-- `d2e462e7` подтягивает интервалы фирменного блока на узкой ленте. Сборка приложения выполнялась с этим исходным кодом и с временным подключением `.tmp/brand_ui.rs` для проверки снимков.
+## Сверка с пакетом
+| Требование | Улика | Есть/нет |
+|---|---|---|
+| 1 Значок: png/256/ico 16…256 из логотипа, прозрачный, «М» по центру; exe | `assets/icons/*` (my sheet `.tmp/review/icon-sheet.png`, ico frames 16/24/32/48/64/128/256 RGBA), `build.rs:12` set_icon, `main.rs:146` window icon | есть |
+| 2 Лента: знак + МАСШТАБ AI (Russo One) + «/» + BIM, обе темы, узкая | `ribbon.rs:978-995`, `theme.rs:249,335`; `tests/snapshots/ribbon_*.png`; my shots `.tmp/shots/ribbon_{ru,en}_{Light,Dark}_{1600,1100,620,619,520,400}.png` | есть |
+| 2 Russo One + OFL рядом, упоминание | `assets/fonts/RussoOne-Regular.ttf`, `OFL-RussoOne.txt`, `README.md:276`, `about-russo-credit` | есть |
+| 3 Название: окно, «О программе», ftl; не менять ccad/.ccad/каталог настроек | `cc_engine/src/app_name.rs:2`, `i18n.rs:154` + test `application_name_is_shared_by_localized_messages`, `app.rs:51`, `main.rs:146`; `recovery.rs:22`, `thumbnails.rs:24`, `main.rs:167` `ConstructCAD` kept; remaining ConstructCraft in ftl = upstream credit/independence/dead update-* strings | есть |
+| inbox: «Масштаб AI / BIM», заголовок «… — <проект>» | `app_name.rs:2`, `app.rs:51` test `the_window_title_names_the_open_file` | есть |
+| inbox: «О программе» — описание ru/en, «сборка Масштаб AI 1 от 27.11.2026» | `dialogs.rs:422-432`, `ru.ftl` about-text/about-brand-build, `en.ftl:745` | есть |
+| inbox: свойства exe (4 поля) | `build.rs:13-19` verbatim; VersionInfo checked by author on a probe exe (not by me) | есть |
+| 4 GPL: строка, исходники, пометка изменённой версии с датой, лицензия | `about-modified-build` (ru/en, others English), `dialogs.rs:407,432` URL `…/tree/mashtab-bim`, `LICENSE` unchanged | есть |
+| 5 Обновления: нет запроса/скачивания; UI убран/«отключены»; тест «нет» при любых настройках | `update.rs:22,140,234,263,313`, `app.rs:94,492`; tests `automatic_checks_are_disabled_for_all_preferences` (M1 FAIL at update.rs:460), `manual_checks_and_installation_are_disabled` (M2 FAIL at update.rs:516 after fix 6d99fa80), `ribbon_buttons_are_accessible`; backstage/About button removed, `preferences.rs:726` | есть |
+| 6 Язык: без сохранённого — ru, сохранённый — как раньше | `preferences.rs:427` + test `startup_language_prefers_saved_language_to_russian_default` (M5 not run, M6 not run) | есть |
+| 7 Имя exe | nothing at runtime depends on `constructcraft.exe`: `mcp_bridge.rs:19` ccad beside current exe, `gpu.rs:185` current_exe, `update_install.rs:308` dead; `packaging/windows/*.wxs` not used for the folder | есть |
 
-## Выполненные проверки
-
-- `cargo fmt --all -- --check`, `git diff --check 68bf2cc4` — PASS на исходном коде.
-- `.tmp/brand_check_assets.py` — PASS. Независимый повтор преобразования из master дал те же RGBA-пиксели обоих PNG и побайтово тот же ICO.
-- `VersionInfo` на `.tmp/resource-probe/resource-probe.exe` — PASS. Cargo также создал `resource.rc`, `resource.o` и `libresource.a` в `target-brand-review` при сборке `cc_app`.
-- Автонастройки, обновление, версия, название и ссылка сверены с кодом и со всеми 13 каталогами. [Russo One в Google Fonts](https://github.com/google/fonts/tree/main/ofl/russoone).
+## Визуальная проверка
+| Кадр | Кто смотрел | Ожидаемое → увиденное | Вердикт |
+|---|---|---|---|
+| `.tmp/review/refs/cmp_ribbon_architecture.png` (base over branch, ref 1100 px ×2) | Claude, ревьюер | блок как у сметчика → знак «М», «МАСШТАБ AI» Russo One, приглушённая «/», BIM, затем кнопки; как `smetchik-header.png` | PASS |
+| `.tmp/review/refs/cmp_ribbon_narrow.png` (520 px) | Claude, ревьюер | узкая лента не ломается → блок и быстрый доступ в одном ряду, кнопки уже, ниже y=31 кадр = база | PASS |
+| `.tmp/review/refs/cmp_prefs.png` (preferences_general) | Claude, ревьюер | переключатель обновлений → текст «отключены», остальное = база | PASS |
+| `.tmp/review/refs/cmp_pref_iface.png` (drift) | Claude, ревьюер | не ветка → 1–2 px на плитке «Система» | n/a (дрейф) |
+| `.tmp/shots/about_ru_Light.png`, `about_ru_Dark.png` | Claude, ревьюер | крупно «Масштаб AI / BIM», описание, «сборка Масштаб AI 1 от 27.11.2026», GPL с датой, исходники → всё видно, заголовок и кнопки в кадре, тело прокручивается | PASS |
+| `.tmp/shots/about_en_Dark.png`, `about_en_Light.png` | Claude, ревьюер | то же по-английски → «Building design in BIM…», «Масштаб AI build 1, 2026-11-27», GPL, URL форка | PASS |
+| `.tmp/review/refs/cmp_myribbons.png` (ru 1600 dark, 520/620/619 light, 400 dark) | Claude, ревьюер | блок читается в обеих темах; узкая не ломается → 1600/620/520 — один ряд; 400 — быстрый доступ переносится на 2-й ряд (окно не уже 900 px, `main.rs:145`) | PASS |
+| `.tmp/review/refs/cmp_icons.png`, `cmp_filters.png` (drift) | Claude, ревьюер | не ветка → новые значки и категория в коде базы, эталоны базы устарели | n/a (дрейф базы) |
 
 ## Передано в гейт
+- Mutations M3 (`update.rs:234` plan gate), M4 (`update.rs:313` update_now gate), M5 (`preferences.rs:428` Ru default →
+  from_system), M6 (saved language ignored) — script `.tmp/review/mutate.py M3|M4|M5|M6` + `cargo nextest run -p cc_app
+  update:: startup_language`; expected: M4/M5/M6 fail, M3 may pass (update_now has its own gate).
+- Consumers of `cc_engine::i18n` (author's list): `cc_engine --test main` bar_marks, imperial_text, macro_editor,
+  material_libraries, pipe_fittings, pipe_tags, schedule_def, title_block_migration; `cc_plugins --test main` api2, files.
+- Snapshot drift of 6 tests (finding 4) on base 68bf2cc4 on this machine — cause of palette/preferences drift not determined;
+  home_* is the profile thumbnail cache. Decide: refresh references in a separate change or keep as is.
+- Built exe VersionInfo (author checked a probe exe only).
 
-- `cargo nextest run --locked -p cc_engine --lib --filterset 'test(/^i18n::/)'`. Сборка дошла до линковки тестового двоичного файла, прогон остановлен в 17:19 (+07) к сдаче. Результата тестов нет.
-- Потребители локализации в `cc_engine/tests/{bar_marks,imperial_text,macro_editor,material_libraries,pipe_fittings,pipe_tags,schedule_def,title_block_migration}.rs` и `cc_plugins/tests/{api2,files}.rs`, через `--test main` с фильтрами модулей. Не запускал в оставшееся время.
-- Сравнение с запуском на базовой сборке для шести сохранённых эталонов из вечерней проверки.
-
-## Визуальная проверка до продолжения в 16:36
-
-| Кадр | Кто смотрел | Ожидаемое → увиденное | Вердикт |
-| --- | --- | --- | --- |
-| `.tmp/shots/icon_sizes.png` | Codex, автор | Исходный «М» в малых размерах → узнаваемый силуэт, форма и цвета совпали с утверждённым знаком | PASS |
-| `ribbon_520_{light,dark}_ru.png` | — | Бренд и меню быстрого доступа в одном ряду → кадр ещё не получен | not_tested |
-| `ribbon_1600_{light,dark}_ru.png` | — | Читаемый фирменный блок на широкой ленте → кадр ещё не получен | not_tested |
-| `about_ru.png`, `about_en.png` | — | Описание, версия, дата, GPL, ссылка на исходники → кадры ещё не получены | not_tested |
-
-Прогон `UPDATE_SNAPSHOTS=1 cargo nextest run --locked -p cc_app --bin constructcraft -E 'test(/capture_brand_ui|ribbon_snapshots|preferences_snapshots|home_snapshots|narrow_ribbon_scrolls|ribbon_compacts_before_scrolling|ribbon_buttons_are_accessible|preferences_open_from_the_file_tab_and_the_shortcut|every_dialog_keeps_its_body_inside|automatic_checks_are_disabled_for_all_preferences|manual_checks_and_installation_are_disabled|startup_language_prefers_saved_language_to_russian_default|the_window_title_names_the_open_file|an_unchanged_title_lets_the_app_settle|mcp_arguments_go_to_ccad/)' --no-capture --no-fail-fast` дошёл до линковки `constructcraft-9eae4f2fe9a69ceb.exe`. В первой попытке исправлено время жизни локализованной подписи во временном тесте (`E0716`), вторая прошла компиляцию Rust. Прогон остановлен перед сдачей в 16:33. Линковка на HDD оставалась незавершённой, размер exe составлял 0 байт. Результат целевых тестов, обновление эталонов и визуальная приёмка ленты и «О программе» остаются открыты.
-
-Для повторной съёмки подключить `.tmp/brand_ui.rs` временным `#[path = "../../../.tmp/brand_ui.rs"] mod brand_ui;` из `crates/cc_app/src/ui_tests.rs`. Возвращаемые эталоны — в `crates/cc_app/tests/snapshots`, дополнительные PNG — в `.tmp/shots`. Готовую папку portable и финальный exe проверяет координатор при упаковке.
-
-Уборка. Удалены две временные загрузки шрифта и лицензии и ранний скрипт ожидания, 44 688 байт. Черновик отчёта удалён после переноса в REPORT.md (11289 байт). Сохранены `.tmp/shots`, `.tmp/brand_ui.rs`, `.tmp/brand_cargo.ps1`, `.tmp/resource-probe` и сборочный кэш `D:\StepanOrca\build\target-brand-review` для завершения проверки и воспроизведения.
-
-## Проверка 27.11 вечер
-
-Продолжение начато в 16:36 (+07), контрольная точка — 17:20 (+07), оценка координатора. База PDF/единиц — `ad8f680c6b65dec21e68d1ea5ca491fb0740cbc8`. Проверяемый коммит с правками и эталонами — `d4908c9f`, отправлен в `origin/mashtab-bim`. Целевые тесты и clippy — через `one-build.ps1` с `target-brand-review`.
-
-- `UPDATE_SNAPSHOTS=1 CC_UI_SNAPSHOTS=1 cargo nextest run --locked -p cc_app --bin constructcraft --filterset <целевые тесты из записи выше> --no-capture --no-fail-fast` — 14 прошли, 2 упали. На кадре 1200×760 заголовок и кнопки «О программе» выходили за окно. Добавил прокрутку тела диалога (`dialogs.rs`). `ribbon_buttons_are_accessible` ожидал снятую из меню кнопку проверки обновлений. Обновил тест так, чтобы он проверял её отсутствие и доступность остальных команд. Запрос ссылки через дерево доступности во временном тесте заменил проверкой видимых заголовка и кнопки, сам URL сверил на кадрах.
-- Повтор без `UPDATE_SNAPSHOTS`, с `CC_UI_SNAPSHOTS=1` — 13 прошли, 3 упали (run `d17188c2-e01b-49fe-910f-736a7b78a170`, `.tmp/brand-compare-retry.log`). Совпали все 17 обновлённых эталонов. Прошли обе временные проверки кадров, проверка кнопок ленты, проверка размеров диалогов, проверки обновлений и выбора языка. Перед успешной пересборкой временного теста исправил время жизни локализованной подписи кнопки (E0716).
-- Три теста сравнения упали на шести сохранённых эталонах. `home_snapshots` — различия в миниатюре дома, 2 895 пикселей в каждой теме. Исходный проект дома и код его экрана совпадают с базой. `preferences_snapshots` — рамка плитки темы (109 светлых / 195 тёмных пикселей) и курсор в поле сочетания клавиш (21 пиксель). `ribbon_snapshots` — одно горизонтальное ребро выбора в палитре команд (590 пикселей). Причину этих расхождений отдельно на базовой сборке не проверял. Исходные шесть эталонов сохранены. Новые кадры и маски различий находятся в `.tmp/shots/kittest-drift/`.
-- `cargo fmt --all -- --check` и `git diff --cached --check` — PASS перед публикацией. В коммит вошли правка диалога, тест доступности ленты, описание в архитектуре и 17 эталонов. Временный `.tmp/brand_ui.rs` оставлен для повторной съёмки, его подключение удалено.
-
-### Визуальная проверка
-
-Рендер egui_kittest, тестовый проект `examples/casa_simples.ccad` (SHA-256 `5793024f1075ba25943348c7c1deceeba8713dd50494154b31c764c18dea7127`), снимки от 17:04 (+07). Образец `D:\StepanOrca\coord\brand\smetchik-header.png` (SHA-256 `1ba68af8a133683c6152a505c64e608d084b199beb2890bcbb93bddd294d0c89`).
-
-| Кадр | Кто смотрел | Ожидаемое → увиденное | Вердикт |
-| --- | --- | --- | --- |
-| `.tmp/shots/ribbon_1600_light_ru.png`, `ribbon_1600_dark_ru.png` | Codex, автор | Знак, Russo One, разделитель и BIM как в образце → блок читается в обеих темах, отделён от кнопок ленты | PASS |
-| `.tmp/shots/ribbon_520_light_ru.png`, `ribbon_520_dark_ru.png` | Codex, автор | Фирменный блок и быстрый доступ в одном ряду → знак, надпись и меню доступны, инструменты ленты прокручиваются. Правая часть ряда вкладок обрезается также в исходном узком эталоне | PASS для фирменного блока и строки быстрого доступа |
-| `.tmp/shots/about_ru.png` | Codex, автор | Название, описание, русская дата, GPL и исходники → «Масштаб AI / BIM», «сборка Масштаб AI 1 от 27.11.2026», строка GPL-3.0 и URL форка читаются. Заголовок и обе нижние кнопки в кадре | PASS |
-| `.tmp/shots/about_en.png` | Codex, автор | Те же сведения на английском → английское описание, `Масштаб AI build 1, 2026-11-27`, GPL-3.0 и URL форка видны вместе с заголовком и кнопками | PASS |
-| Все 16 `ribbon_*.png` из `d4908c9f` | Codex, автор | Только правка строки быстрого доступа → у каждого кадра просмотрена область изменения. Вне координат x=10…579, y=9…30 пиксели совпали (для узкой версии x=10…488) | PASS |
-| `preferences_general.png` | Codex, автор | Настройка обновлений показывает отключённое состояние → сообщение по-португальски видно вместо переключателя, остальной раздел читается | PASS |
-
-- `cargo clippy -p cc_app --all-targets -- -D warnings` — PASS, 4 мин 57 с (`.tmp/brand-clippy.log`). Библиотечный прогон локализации дошёл до линковки `cc_engine` (`.tmp/brand-engine-i18n.log`), остановлен к контрольной точке. Остаток перечислен выше.
-
-Уборка. Удалено 0 файлов, 0 байт. 12 кадров и масок сравнения, 501 362 байта, перенесены в `.tmp/shots/kittest-drift/`. `.tmp/shots/`, временный тест, скрипт очереди, журналы и кэш сборки сохранены для воспроизведения и приёмки.
+## Incidents and cleanup
+- ~16:2x a `orca orchestration check` with a PATH prepend resolved to the GUI `D:\StepanOrcapp\orca\Orca.exe`; it hung
+  120 s and was stopped; afterwards only the 15:21 Orca server process existed (whether a window flashed — not known).
+- 16:30–16:37 my run held the build slot; stopped at the coordinator's 16:36 message (author first), no mutation applied.
+- ~18:05 Claude Code stopped run3 (low system memory) during M5; mutation and temporary test reverted by hand, 4 of my
+  leftover `tail` monitors stopped by PID; build slot free, tree clean.
+- Cleanup: deleted 0 files; moved 26 kittest `.new/.diff` PNG from `crates/cc_app/tests/snapshots` to `.tmp/review/drift/`.
+  Kept in `.tmp/` (worktree): `review/` scripts, logs, refs and crops, `shots/` (28 PNG), `findings.md`, `report-draft.md` —
+  evidence for this report; remove with the worktree after acceptance (coordinator).
