@@ -106,7 +106,7 @@ Build dir `D:\StepanOrca\build\target-i18n`, `-j2`, via `one-build.ps1` (logs `.
 - Built exe VersionInfo (author checked a probe exe only).
 
 ## Incidents and cleanup
-- ~16:2x a `orca orchestration check` with a PATH prepend resolved to the GUI `D:\StepanOrcapp\orca\Orca.exe`; it hung
+- ~16:2x a `orca orchestration check` with a PATH prepend resolved to the GUI `D:\StepanOrca\app\orca\Orca.exe`; it hung
   120 s and was stopped; afterwards only the 15:21 Orca server process existed (whether a window flashed — not known).
 - 16:30–16:37 my run held the build slot; stopped at the coordinator's 16:36 message (author first), no mutation applied.
 - ~18:05 Claude Code stopped run3 (low system memory) during M5; mutation and temporary test reverted by hand, 4 of my
