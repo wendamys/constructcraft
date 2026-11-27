@@ -978,16 +978,21 @@ pub fn ribbon(ui: &mut Ui, state: &mut AppState) {
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 1.0;
         ui.add_space(2.0);
-        let (mark, _) = ui.allocate_exact_size(vec2(20.0, 20.0), Sense::hover());
-        if let Some(logo) = theme::logo(ui.ctx()) {
-            let uv = egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
-            ui.painter().image(logo.id(), mark, uv, egui::Color32::WHITE);
-        }
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 6.0;
+            if let Some(logo) = theme::logo(ui.ctx()) {
+                ui.add(egui::Image::new(&logo).fit_to_exact_size(vec2(22.0, 22.0)));
+            }
+            ui.label(RichText::new("МАСШТАБ AI").family(theme::wordmark()).size(14.0).color(PALETTE.text));
+            ui.label(theme::muted("/").size(13.0));
+            ui.label(RichText::new("BIM").family(theme::semibold()).size(13.0).color(PALETTE.text));
+        });
         ui.add_space(8.0);
         let divider = |ui: &mut Ui| {
             let (div, _) = ui.allocate_exact_size(vec2(9.0, 18.0), Sense::hover());
             ui.painter().vline(div.center().x, div.y_range(), Stroke::new(1.0, PALETTE.border));
         };
+        divider(ui);
         for command in [UiCommand::Home, UiCommand::New, UiCommand::Open, UiCommand::Save] {
             command_icon(ui, state, command);
         }

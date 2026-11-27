@@ -245,6 +245,11 @@ pub fn semibold() -> FontFamily {
     FontFamily::Name("semibold".into())
 }
 
+/// Russo One is reserved for the ribbon wordmark.
+pub fn wordmark() -> FontFamily {
+    FontFamily::Name("russo-one".into())
+}
+
 /// Section or panel title text.
 pub fn title(text: impl Into<String>) -> RichText {
     RichText::new(text).family(semibold()).size(13.0).color(PALETTE.text)
@@ -325,6 +330,11 @@ fn fonts() -> FontDefinitions {
         "plex-mono".into(),
         Arc::new(FontData::from_static(include_bytes!("../../../assets/fonts/IBMPlexMono-Regular.ttf"))),
     );
+    fonts.font_data.insert(
+        "russo-one".into(),
+        Arc::new(FontData::from_static(include_bytes!("../../../assets/fonts/RussoOne-Regular.ttf"))),
+    );
+    fonts.families.insert(wordmark(), vec!["russo-one".into()]);
     // IBM Plex first; egui's bundled fonts stay as fallbacks for symbols and emoji.
     fonts.families.entry(FontFamily::Monospace).or_default().insert(0, "plex-mono".into());
     let proportional = fonts.families.entry(FontFamily::Proportional).or_default();
