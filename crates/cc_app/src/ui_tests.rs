@@ -448,7 +448,8 @@ fn ribbon_buttons_are_accessible() {
     }
     let state = sample_state();
     // Zoom to Fit lives in each view's bar (and ZE), not in a tab.
-    let hidden = [UiCommand::CommandPalette, UiCommand::ToggleRibbon, UiCommand::ZoomFit];
+    let hidden = [UiCommand::CommandPalette, UiCommand::ToggleRibbon, UiCommand::ZoomFit, UiCommand::CheckUpdates];
+    assert!(!found.contains(&UiCommand::CheckUpdates.label(&state)), "updates are disabled in this build");
     for command in UiCommand::all().into_iter().filter(|c| !hidden.contains(c)) {
         assert!(found.contains(&command.label(&state)), "{command:?} is not in the ribbon");
     }

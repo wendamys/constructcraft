@@ -410,60 +410,67 @@ fn about(ctx: &Context, state: &mut AppState) {
     let response = Dialog::new("about", t!("dlg-about")).width(500.0).show(
         ctx,
         |ui| {
-            // The app: its logo, name, version and what it is, centered.
-            ui.vertical_centered(|ui| {
-                ui.add_space(4.0);
-                let (rect, _) = ui.allocate_exact_size(egui::vec2(84.0, 84.0), egui::Sense::hover());
-                if let Some(logo) = theme::logo(ui.ctx()) {
-                    let uv = egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
-                    ui.painter().image(logo.id(), rect, uv, egui::Color32::WHITE);
-                }
-                ui.add_space(6.0);
-                ui.label(RichText::new(crate::APP_NAME).family(theme::semibold()).size(24.0).color(PALETTE.text));
-                ui.label(RichText::new(t!("about-text")).size(13.5).color(PALETTE.text));
-                ui.add_space(4.0);
-                let version = format!("{} {}", t!("about-version"), env!("CARGO_PKG_VERSION"));
-                crate::settings::badge(ui, &version, PALETTE.accent_text);
-                ui.label(RichText::new(t!("about-brand-build", "date" => date)).size(12.5).color(PALETTE.text_muted));
-                ui.add_space(8.0);
-                ui.label(t!("about-modified-build", "date" => date));
-                ui.label(t!("about-source-code"));
-                ui.hyperlink(source);
-            });
-            ui.add_space(14.0);
-            crate::settings::card(ui, |ui| {
-                type Value<'a> = &'a dyn Fn(&mut Ui);
-                let rows: [(String, Value); 3] = [
-                    (t!("about-author"), &|ui: &mut Ui| {
-                        ui.label(env!("CARGO_PKG_AUTHORS"));
-                    }),
-                    (t!("about-license-label"), &|ui: &mut Ui| {
-                        ui.hyperlink_to("GPL-3.0-or-later", "https://www.gnu.org/licenses/gpl-3.0.html");
-                    }),
-                    (t!("about-repository"), &|ui: &mut Ui| {
-                        ui.hyperlink_to(repository.trim_start_matches("https://"), repository);
-                    }),
-                ];
-                for (i, (label, value)) in rows.iter().enumerate() {
-                    crate::settings::card_row(ui, ("about", i), 40.0, false, i == 2, |ui| {
-                        crate::settings::cell(ui, 110.0, |ui| {
-                            ui.label(RichText::new(label).color(PALETTE.text_muted));
+            // Leave space for the dialog header, footer, and body margins.
+            let body_height = (ctx.content_rect().height() - 160.0).max(64.0);
+            egui::ScrollArea::vertical().max_height(body_height).auto_shrink([false, true]).show(ui, |ui| {
+                // The app: its logo, name, version and what it is, centered.
+                ui.vertical_centered(|ui| {
+                    ui.add_space(4.0);
+                    let (rect, _) = ui.allocate_exact_size(egui::vec2(84.0, 84.0), egui::Sense::hover());
+                    if let Some(logo) = theme::logo(ui.ctx()) {
+                        let uv = egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
+                        ui.painter().image(logo.id(), rect, uv, egui::Color32::WHITE);
+                    }
+                    ui.add_space(6.0);
+                    ui.label(RichText::new(crate::APP_NAME).family(theme::semibold()).size(24.0).color(PALETTE.text));
+                    ui.label(RichText::new(t!("about-text")).size(13.5).color(PALETTE.text));
+                    ui.add_space(4.0);
+                    let version = format!("{} {}", t!("about-version"), env!("CARGO_PKG_VERSION"));
+                    crate::settings::badge(ui, &version, PALETTE.accent_text);
+                    ui.label(
+                        RichText::new(t!("about-brand-build", "date" => date)).size(12.5).color(PALETTE.text_muted),
+                    );
+                    ui.add_space(8.0);
+                    ui.label(t!("about-modified-build", "date" => date));
+                    ui.label(t!("about-source-code"));
+                    ui.hyperlink(source);
+                });
+                ui.add_space(14.0);
+                crate::settings::card(ui, |ui| {
+                    type Value<'a> = &'a dyn Fn(&mut Ui);
+                    let rows: [(String, Value); 3] = [
+                        (t!("about-author"), &|ui: &mut Ui| {
+                            ui.label(env!("CARGO_PKG_AUTHORS"));
+                        }),
+                        (t!("about-license-label"), &|ui: &mut Ui| {
+                            ui.hyperlink_to("GPL-3.0-or-later", "https://www.gnu.org/licenses/gpl-3.0.html");
+                        }),
+                        (t!("about-repository"), &|ui: &mut Ui| {
+                            ui.hyperlink_to(repository.trim_start_matches("https://"), repository);
+                        }),
+                    ];
+                    for (i, (label, value)) in rows.iter().enumerate() {
+                        crate::settings::card_row(ui, ("about", i), 40.0, false, i == 2, |ui| {
+                            crate::settings::cell(ui, 110.0, |ui| {
+                                ui.label(RichText::new(label).color(PALETTE.text_muted));
+                            });
+                            value(ui);
                         });
-                        value(ui);
-                    });
+                    }
+                });
+                crate::settings::group(ui, &t!("about-credits"));
+                ui.add_space(4.0);
+                for line in
+                    [t!("about-built-with"), t!("about-font-credit"), t!("about-russo-credit"), t!("about-icon-credit")]
+                {
+                    ui.label(RichText::new(line).size(12.0).color(PALETTE.text_muted));
                 }
+                ui.add_space(12.0);
+                ui.add(
+                    egui::Label::new(RichText::new(t!("about-independence")).size(11.5).color(PALETTE.text_faint))
+                        .wrap(),
+                );
             });
-            crate::settings::group(ui, &t!("about-credits"));
-            ui.add_space(4.0);
-            for line in
-                [t!("about-built-with"), t!("about-font-credit"), t!("about-russo-credit"), t!("about-icon-credit")]
-            {
-                ui.label(RichText::new(line).size(12.0).color(PALETTE.text_muted));
-            }
-            ui.add_space(12.0);
-            ui.add(
-                egui::Label::new(RichText::new(t!("about-independence")).size(11.5).color(PALETTE.text_faint)).wrap(),
-            );
         },
         |f| {
             open_repo = f.extra(t!("about-open-repository"));
