@@ -115,7 +115,7 @@ mod wall_draw_ui;
 mod wall_framing_ui;
 mod wall_profile_ui;
 
-const APP_NAME: &str = "МасштабBIM";
+use i18n::APP_NAME;
 
 fn main() -> eframe::Result<()> {
     // The Revit converter that `rvt_import` starts; read before `std::env::args`, which takes UTF-8 only.

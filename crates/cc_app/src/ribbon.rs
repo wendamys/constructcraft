@@ -423,16 +423,17 @@ fn small_button(ui: &mut Ui, glyph: Glyph<'_>, label: &str, enabled: bool, selec
     if enabled { r.on_hover_cursor(egui::CursorIcon::PointingHand) } else { r }
 }
 
-/// Small square icon button (quick access toolbar).
-fn icon_button(ui: &mut Ui, (icon, badge): (Icon, Option<Badge>), enabled: bool) -> Response {
+/// Small icon button. The quick access row can narrow its hit targets without shrinking the icons.
+fn icon_button(ui: &mut Ui, (icon, badge): (Icon, Option<Badge>), enabled: bool, width: f32) -> Response {
     let sense = if enabled { Sense::click() } else { Sense::hover() };
-    let (rect, response) = ui.allocate_exact_size(vec2(26.0, 26.0), sense);
+    let (rect, response) = ui.allocate_exact_size(vec2(width, 26.0), sense);
     if enabled && response.hovered() {
         ui.painter().rect_filled(rect, theme::RADIUS as f32, PALETTE.hover);
     }
     let color = if enabled { PALETTE.text_muted } else { PALETTE.text_faint.gamma_multiply(0.6) };
     let tones = Tones { ink: color, ..Tones::of(theme::palette(ui.ctx()), badge, enabled, false) };
-    icons::paint_toned(ui.painter(), rect.shrink(5.0), icon, tones, badge);
+    let icon_rect = egui::Rect::from_center_size(rect.center(), vec2(16.0, 16.0));
+    icons::paint_toned(ui.painter(), icon_rect, icon, tones, badge);
     response
 }
 
@@ -959,9 +960,9 @@ pub(crate) fn key_cap(ui: &mut Ui, keys: &str) -> egui::Response {
 }
 
 /// A small quick access button for `command`.
-fn command_icon(ui: &mut Ui, state: &mut AppState, command: UiCommand) {
+fn command_icon(ui: &mut Ui, state: &mut AppState, command: UiCommand, width: f32) {
     let why = command.unavailable(state);
-    let r = icon_button(ui, (command.icon(), command.badge()), why.is_none());
+    let r = icon_button(ui, (command.icon(), command.badge()), why.is_none(), width);
     let label = command.label(state);
     r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, why.is_none(), &label));
     if command_tooltip(r, state, command, why).clicked() {
@@ -975,7 +976,10 @@ pub fn ribbon(ui: &mut Ui, state: &mut AppState) {
     // Measured first: rows wider than the window grow the Ui's rectangle.
     let full_width = ui.available_width();
     // Quick access toolbar at the top left, where desktop applications keep it.
-    ui.horizontal(|ui| {
+    let compact = full_width < 620.0;
+    let button_width = if compact { 20.0 } else { 26.0 };
+    let divider_width = if compact { 7.0 } else { 9.0 };
+    ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing.x = 1.0;
         ui.add_space(2.0);
         ui.horizontal(|ui| {
@@ -989,20 +993,20 @@ pub fn ribbon(ui: &mut Ui, state: &mut AppState) {
         });
         ui.add_space(8.0);
         let divider = |ui: &mut Ui| {
-            let (div, _) = ui.allocate_exact_size(vec2(9.0, 18.0), Sense::hover());
+            let (div, _) = ui.allocate_exact_size(vec2(divider_width, 18.0), Sense::hover());
             ui.painter().vline(div.center().x, div.y_range(), Stroke::new(1.0, PALETTE.border));
         };
         divider(ui);
         for command in [UiCommand::Home, UiCommand::New, UiCommand::Open, UiCommand::Save] {
-            command_icon(ui, state, command);
+            command_icon(ui, state, command, button_width);
         }
         divider(ui);
-        command_icon(ui, state, UiCommand::Undo);
-        command_icon(ui, state, UiCommand::Redo);
+        command_icon(ui, state, UiCommand::Undo, button_width);
+        command_icon(ui, state, UiCommand::Redo, button_width);
         // The user's frequent commands (right-click a ribbon button to add it), then the menu to arrange them.
         divider(ui);
         for command in quick_access(state) {
-            command_icon(ui, state, command);
+            command_icon(ui, state, command, button_width);
         }
         quick_access_menu(ui, state);
     });
@@ -1064,10 +1068,10 @@ pub fn ribbon(ui: &mut Ui, state: &mut AppState) {
             }
         }
         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-            command_icon(ui, state, UiCommand::CommandPalette);
+            command_icon(ui, state, UiCommand::CommandPalette, 26.0);
             let command = UiCommand::ToggleRibbon;
             let icon = if collapsed { Icon::ChevronDown } else { Icon::ChevronUp };
-            let r = icon_button(ui, (icon, None), true);
+            let r = icon_button(ui, (icon, None), true, 26.0);
             let label = command.label(state);
             r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, &label));
             if command_tooltip(r, state, command, None).clicked() {

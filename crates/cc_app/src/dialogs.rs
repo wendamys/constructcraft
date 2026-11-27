@@ -405,6 +405,7 @@ fn about(ctx: &Context, state: &mut AppState) {
     }
     let repository = env!("CARGO_PKG_REPOSITORY");
     let source = "https://github.com/wendamys/constructcraft/tree/mashtab-bim";
+    let date = crate::i18n::format_date(2026, 11, 27);
     let mut open_repo = 0;
     let response = Dialog::new("about", t!("dlg-about")).width(500.0).show(
         ctx,
@@ -419,13 +420,13 @@ fn about(ctx: &Context, state: &mut AppState) {
                 }
                 ui.add_space(6.0);
                 ui.label(RichText::new(crate::APP_NAME).family(theme::semibold()).size(24.0).color(PALETTE.text));
+                ui.label(RichText::new(t!("about-text")).size(13.5).color(PALETTE.text));
+                ui.add_space(4.0);
                 let version = format!("{} {}", t!("about-version"), env!("CARGO_PKG_VERSION"));
                 crate::settings::badge(ui, &version, PALETTE.accent_text);
+                ui.label(RichText::new(t!("about-brand-build", "date" => date)).size(12.5).color(PALETTE.text_muted));
                 ui.add_space(8.0);
-                ui.label(RichText::new(t!("about-text")).size(13.5).color(PALETTE.text));
-                ui.label(RichText::new(t!("about-familiar")).size(12.5).color(PALETTE.text_muted));
-                ui.add_space(8.0);
-                ui.label(t!("about-modified-build", "date" => crate::i18n::format_date(2026, 11, 27)));
+                ui.label(t!("about-modified-build", "date" => date));
                 ui.label(t!("about-source-code"));
                 ui.hyperlink(source);
             });

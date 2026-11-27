@@ -665,7 +665,7 @@ Só essa aba usa a rede: ela lê o índice e os arquivos que ele lista, por HTTP
 
 ## Aviso de atualização
 
-As atualizações estão desativadas no МасштабBIM. *Preferências → Geral* exibe o status das atualizações. O comando *Atualizações* exibe o mesmo status.
+As atualizações estão desativadas nesta versão. *Preferências → Geral* exibe o status das atualizações. O comando *Atualizações* exibe o mesmo status.
 
 ## Salvamento automático e recuperação
 

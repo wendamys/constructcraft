@@ -149,9 +149,23 @@ impl Language {
 
 static CURRENT: AtomicUsize = AtomicUsize::new(0);
 
+include!("app_name.rs");
+
+fn localized_messages(lang: Language) -> HashMap<String, String> {
+    let mut messages = parse_messages(lang.source());
+    if let Some(name) = messages.get_mut("app-name") {
+        *name = name.replace("{ $app_name }", APP_NAME);
+        let name = name.clone();
+        for message in messages.values_mut().filter(|message| message.contains("{ app-name }")) {
+            *message = message.replace("{ app-name }", &name);
+        }
+    }
+    messages
+}
+
 fn bundle(lang: Language) -> &'static HashMap<String, String> {
     static BUNDLES: OnceLock<Vec<HashMap<String, String>>> = OnceLock::new();
-    &BUNDLES.get_or_init(|| Language::ALL.iter().map(|l| parse_messages(l.source())).collect())[lang.index()]
+    &BUNDLES.get_or_init(|| Language::ALL.iter().copied().map(localized_messages).collect())[lang.index()]
 }
 
 pub fn language() -> Language {
@@ -367,6 +381,18 @@ mod tests {
             for (k, v) in &messages {
                 assert_eq!(placeholders_of(v), placeholders_of(&reference[k]), "{lang:?}: placeholders of {k}");
             }
+        }
+    }
+
+    #[test]
+    fn application_name_is_shared_by_localized_messages() {
+        for lang in Language::ALL {
+            let messages = bundle(lang);
+            assert_eq!(messages["app-name"], APP_NAME, "{lang:?}");
+            for key in ["file-filter", "about-modified-build", "gpu-failed-title", "dlg-recovery-text"] {
+                assert!(messages[key].contains(APP_NAME), "{lang:?}: {key}");
+            }
+            assert!(messages.values().all(|message| !message.contains("{ app-name }")), "{lang:?}");
         }
     }
 

@@ -665,7 +665,7 @@ Only this tab reaches the network: it reads the index and the archives it lists,
 
 ## Update notice
 
-Updates are disabled in МасштабBIM. *Preferences → General* displays the update status. The *Updates* command shows the same status.
+Updates are disabled in this build. *Preferences → General* displays the update status. The *Updates* command shows the same status.
 
 ## Autosave and recovery
 

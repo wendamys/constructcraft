@@ -799,10 +799,10 @@ mod tests {
     #[test]
     fn the_window_title_names_the_open_file() {
         let path = std::path::Path::new("projetos/casa.ccad");
-        assert_eq!(window_title(Some(path), "Novo projeto", false), "МасштабBIM — casa.ccad");
-        assert_eq!(window_title(Some(path), "Novo projeto", true), "МасштабBIM — casa.ccad *");
+        assert_eq!(window_title(Some(path), "Novo projeto", false), format!("{APP_NAME} — casa.ccad"));
+        assert_eq!(window_title(Some(path), "Novo projeto", true), format!("{APP_NAME} — casa.ccad *"));
         // Not saved yet: the project's name.
-        assert_eq!(window_title(None, "Novo projeto", true), "МасштабBIM — Novo projeto *");
+        assert_eq!(window_title(None, "Novo projeto", true), format!("{APP_NAME} — Novo projeto *"));
     }
 
     #[test]
