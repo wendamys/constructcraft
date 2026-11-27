@@ -166,6 +166,10 @@ fn fetch() -> Result<String, ureq::Error> {
 /// disconnected if the thread could not start), and `ctx` repaints then.
 fn spawn(ctx: egui::Context) -> Receiver<Outcome> {
     let (tx, rx) = std::sync::mpsc::channel();
+    // Tests never reach the network: the receiver is disconnected, a failed check.
+    if cfg!(test) {
+        return rx;
+    }
     let started = std::thread::Builder::new().name("update-check".into()).spawn(move || {
         let outcome = match (current(), fetch()) {
             (Some(current), Ok(body)) => evaluate(current, &body),
@@ -256,8 +260,7 @@ impl Updates {
         if manual {
             self.report = None;
         }
-        // Tests never reach the network.
-        if !ENABLED || disabled_by_env() || cfg!(test) {
+        if !ENABLED || disabled_by_env() {
             self.finish(Outcome::Disabled, manual);
             return;
         }
